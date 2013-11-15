@@ -64,28 +64,6 @@ namespace modeler{
     }
 
 
-    bool Model::hasNameAttribute() const{
-
-        ModelField *field;
-
-        field = this->getFieldByName( Utf8String("name") );
-
-        if( field != NULL ){
-
-            if( field->getType() == "attribute" ){
-
-                return true;
-
-            }
-
-        }
-
-        return false;
-
-    }
-
-
-
 
     std::ostream& Model::writeBaseModelFile( std::ostream &output_stream ) const{
 
@@ -95,7 +73,7 @@ namespace modeler{
 
         output_stream << endl <<
         endl <<
-        "Base" << this->name << " = function( data_reference ){" << endl <<
+        "Base" << this->name << " = function(){" << endl <<
         endl <<
         endl <<
         "    if( !this._class_name ){" << endl <<
@@ -103,51 +81,16 @@ namespace modeler{
         "    }" << endl <<
         endl <<
         endl <<
+        "    if( !this._collection_name ){" << endl <<
+        "        this._collection_name = '" << this->name << "';" << endl <<
+        "    }" << endl <<
         endl <<
-        "    XmlModel.apply( this, arguments );" << endl <<
+        endl <<
+        endl <<
+        "    MeteorModel.apply( this, arguments );" << endl <<
         endl <<
         "    var me = this;" << endl <<
         endl;
-
-
-        // initialize user types (to maintain a reference to them)
-
-            for( it = this->fields.begin(); it != this->fields.end(); it++ ){
-
-                model_field = it->second;
-
-                if( model_field->getType() == "attribute" || model_field->getType() == "text_body" || !model_field->isUserType() ){
-                    continue;
-                }
-
-                output_stream <<
-                "    var " << model_field->getName() << " = null;" << endl;
-
-            }
-
-
-        // Add default list of user-typed child nodes so that they can be overridden by the user-editable model
-
-            output_stream << endl << endl <<
-            "    me._child_node_names = {" << endl;
-
-            vector<Utf8String> child_node_names;
-
-            for( it = this->fields.begin(); it != this->fields.end(); it++ ){
-
-                model_field = it->second;
-
-                if( model_field->getType() == "attribute" || model_field->getType() == "text_body" || !model_field->isUserType() ){
-                    continue;
-                }
-
-                child_node_names.push_back( "        " + model_field->getName() + ": '" + model_field->getName() + "'" );
-
-            }
-
-            output_stream << Utf8String(",\n").join( child_node_names ) << endl <<
-            "    };" << endl;
-
 
 
         output_stream << endl << endl << endl;
@@ -156,170 +99,112 @@ namespace modeler{
             output_stream <<
             "    me._Base" << this->name << " = function(){" << endl <<
             endl <<
-            "        me._XmlModel.apply( this, arguments );" << endl <<
-            endl << endl;
-
-            // Hydrate user-typed members
-
-                for( it = this->fields.begin(); it != this->fields.end(); it++ ){
-
-                    model_field = it->second;
-
-                    if( model_field->getType() == "attribute" || model_field->getType() == "text_body" || !model_field->isUserType() ){
-                        continue;
-                    }
-
-                    output_stream <<
-                    "        me.set" << model_field->getName().toCamelCase() << "( new " << model_field->getType() << "(me.getChild(me._child_node_names." << model_field->getName() << ")) );" << endl;
-
-                }
-
-            output_stream << endl <<
+            "        me._MeteorModel.apply( this, arguments );" << endl <<
+            endl <<
             "    };"
             << endl << endl << endl;
 
 
-        // the getter, setter and deleter for each of the attributes
-
-            for( it = this->fields.begin(); it != this->fields.end(); it++ ){
-
-                model_field = it->second;
-
-                //cout << this->name << ":" << model_field->getName() << endl;
-
-                if( model_field->getType() != "attribute" ){
-                    continue;
-                }
-
-                output_stream <<
-
-                "    me.get" << model_field->getName().toCamelCase() << " = function(){" << endl <<
-                "        return me.getAttributeValue( '" << model_field->getName() << "' );" << endl <<
-                "    };" << endl <<
-                endl <<
-                endl <<
-                endl <<
-
-
-                "    me.set" << model_field->getName().toCamelCase() << " = function( " << model_field->getName() << " ){ " << endl <<
-                "        return me.setAttributeValue( '" << model_field->getName() << "', " << model_field->getName() << " );" << endl <<
-                "    };" << endl <<
-                endl <<
-                endl <<
-                endl <<
-
-
-                "    me.remove" << model_field->getName().toCamelCase() << " = function(){" << endl <<
-                "        return me.removeAttribute( '" << model_field->getName() << "' );" << endl <<
-                "    };" << endl <<
-                endl <<
-                endl <<
-                endl;
-
-            }
-
-
-        // the getter, setter and deleter for each of the text_body (there should only be one though (with a name of "text"), if any)
-
-            for( it = this->fields.begin(); it != this->fields.end(); it++ ){
-
-                model_field = it->second;
-
-                if( model_field->getType() != "text_body" ){
-                    continue;
-                }
-
-                //model_field->setName( Utf8String("text") );
-
-                output_stream <<
-
-                "    me.get" << model_field->getName().toCamelCase() << " = function(){" << endl <<
-                "        return me.getTextValue( '" << model_field->getName() << "' );" << endl <<
-                "    };" << endl <<
-                endl <<
-                endl <<
-                endl <<
-
-
-                "    me.set" << model_field->getName().toCamelCase() << " = function( " << model_field->getName() << " ){ " << endl <<
-                "        return me.setTextValue( '" << model_field->getName() << "', " << model_field->getName() << " );" << endl <<
-                "    };" << endl <<
-                endl <<
-                endl <<
-                endl <<
-
-
-                "    me.remove" << model_field->getName().toCamelCase() << " = function(){" << endl <<
-                "        return me.removeTextValue( '" << model_field->getName() << "' );" << endl <<
-                "    };" << endl <<
-                endl <<
-                endl <<
-                endl;
-
-            }
-
-
         // the getter, setter and deleter for each of the fields
-
-
-
             for( it = this->fields.begin(); it != this->fields.end(); it++ ){
 
                 model_field = it->second;
 
-                if( model_field->getType() == "attribute" || model_field->getType() == "text_body" ){
-                    continue;
+                if( model_field->isUserType() ){
+
+                    output_stream <<
+
+                    "    me.get" << model_field->getName().toCamelCase() << " = function(){" << endl <<
+                    endl <<
+                    "        if( !me._data." << model_field->getName() << "_id ){" << endl <<
+                    "            return null;" << endl <<
+                    "        }" << endl <<
+                    endl <<
+                    endl <<
+                    "        try {" << endl <<
+                    "            var result = new " << model_field->getType() << "().hydrateFromId( me._data." << model_field->getName() << "_id );" << endl <<
+                    "        } catch( e ){" << endl <<
+                    "           return null;" << endl <<
+                    "        }" << endl <<
+                    endl <<
+                    endl <<
+                    "        return result;" << endl <<
+                    endl <<
+                    "    };" << endl <<
+
+                    endl <<
+                    endl <<
+                    endl <<
+
+
+                    "    me.get" << model_field->getName().toCamelCase() << "Id = function(){" << endl <<
+                    endl <<
+                    "        if( !me._data." << model_field->getName() << "_id ){" << endl <<
+                    "            return null;" << endl <<
+                    "        }" << endl <<
+                    endl <<
+                    endl <<
+                    "        return me._data." << model_field->getName() << "_id;" << endl <<
+                    endl <<
+                    "    };" << endl <<
+
+                    endl <<
+                    endl <<
+                    endl <<
+
+                    "    me.set" << model_field->getName().toCamelCase() << "Id = function( " << model_field->getName() << "_id ){ " << endl <<
+                    endl <<
+                    "        me.set( '" << model_field->getName() << "_id', " << model_field->getName() << "_id );" << endl <<
+                    endl <<
+                    "        return me;" << endl <<
+                    endl <<
+                    "    };" << endl <<
+                    endl <<
+                    endl <<
+
+
+
+                    "    me.set" << model_field->getName().toCamelCase() << " = function( " << model_field->getName() << " ){ " << endl <<
+                    endl <<
+                    "        me.set( '" << model_field->getName() << "_id', " << model_field->getName() << ".getId() );" << endl <<
+                    endl <<
+                    "        return me;" << endl <<
+                    endl <<
+                    "    };" << endl <<
+                    endl <<
+                    endl <<
+                    endl;
+
+
+                } else {
+
+                    output_stream <<
+
+                    "    me.get" << model_field->getName().toCamelCase() << " = function(){" << endl <<
+                    endl <<
+                    "        return String(me._data." << model_field->getName() << ").length ? me._data." << model_field->getName() << " : null;" << endl <<
+                    endl <<
+                    "    };" << endl <<
+
+                    endl <<
+                    endl <<
+                    endl <<
+
+                    "    me.set" << model_field->getName().toCamelCase() << " = function( " << model_field->getName() << " ){ " << endl <<
+                    endl <<
+                    "        me.set( '" << model_field->getName() << "', " << model_field->getName() << " );" << endl <<
+                    endl <<
+                    "        return me;" << endl <<
+                    endl <<
+                    "    };" << endl <<
+                    endl <<
+                    endl <<
+                    endl;
+
                 }
-
-                is_user_type = model_field->isUserType();
-
-
-                output_stream <<
-                "    me.get" << model_field->getName().toCamelCase() << " = function(){" << endl;
-                if( is_user_type ){
-                    output_stream << "        return " << model_field->getName() << ";" << endl;
-                }else{
-                    output_stream << "        return me.getChildTextValue( '" << model_field->getName() << "' );" << endl;
-                }
-                output_stream <<
-                "    };" << endl <<
-                endl <<
-                endl <<
-                endl;
-
-
-
-                output_stream <<
-                "    me.set" << model_field->getName().toCamelCase() << " = function( new_" << model_field->getName() << " ){" << endl;
-                if( is_user_type ){
-                    output_stream << "        " << model_field->getName() << " = new_" << model_field->getName() << ";" << endl;
-                }else{
-                    output_stream << "        return me.setChildTextValue( '" << model_field->getName() << "' );" << endl;
-                }
-                output_stream <<
-                "    };" << endl <<
-                endl <<
-                endl <<
-                endl;
-
-
-
-                output_stream <<
-                "    me.remove" << model_field->getName().toCamelCase() << " = function(){" << endl;
-                if( is_user_type ){
-                    output_stream << "        " << model_field->getName() << " = null;" << endl;
-                    output_stream << "        return me.removeChild( '" << model_field->getName() << "' );" << endl;
-                }else{
-                    output_stream << "        return me.removeChild( '" << model_field->getName() << "' );" << endl;
-                }
-                output_stream <<
-                "    };" << endl <<
-                endl <<
-                endl <<
-                endl;
-
 
             }
+
 
         output_stream <<
         "    if( me._class_name == 'Base" << this->name << "' ){" << endl <<
@@ -337,7 +222,7 @@ namespace modeler{
 
         output_stream << endl <<
         endl <<
-        this->name << " = function( data_reference ){" << endl <<
+        this->name << " = function(){" << endl <<
         endl <<
         endl <<
         "    if( !this._class_name ){" << endl <<
@@ -372,6 +257,10 @@ namespace modeler{
         return output_stream;
 
     }
+
+
+
+
 
 
     std::ostream& Model::writeBaseListFile( std::ostream &output_stream ) const{
@@ -423,7 +312,6 @@ namespace modeler{
         endl <<
         endl <<
         endl <<
-
 
 
         "    me.prepend = function( " << this->name.toLowerCase() << " ){" << endl <<

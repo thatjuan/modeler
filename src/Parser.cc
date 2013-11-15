@@ -466,20 +466,20 @@ namespace modeler{
             if( create_derived_model ){
                 model_file.open( model_filename->getCString(), fstream::out );
             }
-            base_collection_file.open( base_collection_filename->getCString(), fstream::out );
-            if( create_derived_collection ){
-                collection_file.open( collection_filename->getCString(), fstream::out );
-            }
+            //base_collection_file.open( base_collection_filename->getCString(), fstream::out );
+            //if( create_derived_collection ){
+            //    collection_file.open( collection_filename->getCString(), fstream::out );
+            //}
 
             model->writeBaseModelFile( base_model_file );
             if( create_derived_model ){
                 model->writeModelFile( model_file );
             }
 
-            model->writeBaseListFile( base_collection_file );
-            if( create_derived_collection ){
-                model->writeListFile( collection_file );
-            }
+            //model->writeBaseListFile( base_collection_file );
+            //if( create_derived_collection ){
+            //    model->writeListFile( collection_file );
+            //}
 
             base_model_file.close();
             if( create_derived_model ){
