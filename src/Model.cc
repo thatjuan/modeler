@@ -178,28 +178,103 @@ namespace modeler{
 
                 } else {
 
-                    output_stream <<
+                    if( model_field->getType() == "array" ){
 
-                    "    me.get" << model_field->getName().toCamelCase() << " = function(){" << endl <<
-                    endl <<
-                    "        return String(me._data." << model_field->getName() << ").length ? me._data." << model_field->getName() << " : null;" << endl <<
-                    endl <<
-                    "    };" << endl <<
+                        output_stream <<
 
-                    endl <<
-                    endl <<
-                    endl <<
+                        "    me.add" << model_field->getName().toCamelCase() << " = function( value ){" << endl <<
+                        endl <<
+                        "        value = String(value);" << endl <<
+                        endl <<
+                        "        if( !me._data." << model_field->getName() << " || !Array.isArray(me._data." << model_field->getName() << ") ){" << endl <<
+                        "            me._data." << model_field->getName() << " = [];" << endl <<
+                        "        }" << endl <<
+                        endl <<
+                        "        if(_.indexOf(me._data." << model_field->getName() << ", value) == -1 ){" << endl <<
+                        "            me._data." << model_field->getName() << ".push( value );" << endl <<
+                        "            me.set( '" << model_field->getName() << "', me._data." << model_field->getName() << " );" << endl <<
+                        "        }" << endl <<
+                        endl <<
+                        "        return me;" << endl <<
+                        endl <<
+                        "    };" << endl <<
 
-                    "    me.set" << model_field->getName().toCamelCase() << " = function( " << model_field->getName() << " ){ " << endl <<
-                    endl <<
-                    "        me.set( '" << model_field->getName() << "', " << model_field->getName() << " );" << endl <<
-                    endl <<
-                    "        return me;" << endl <<
-                    endl <<
-                    "    };" << endl <<
-                    endl <<
-                    endl <<
-                    endl;
+                        endl <<
+                        endl <<
+                        endl <<
+
+                        "    me.remove" << model_field->getName().toCamelCase() << " = function( value ){" << endl <<
+                        endl <<
+                        "        value = String(value);" << endl <<
+                        endl <<
+                        "        if( !me._data." << model_field->getName() << " || !Array.isArray(me._data." << model_field->getName() << ") ){" << endl <<
+                        "            return false;" << endl <<
+                        "        }" << endl <<
+                        endl <<
+                        "        _.remove( me._data." << model_field->getName() << ", function(item){" << endl <<
+                        "            return item === value;" << endl <<
+                        "        });" << endl <<
+                        endl <<
+                        "        return me;" << endl <<
+                        endl <<
+                        "    };" << endl <<
+
+                        endl <<
+                        endl <<
+                        endl <<
+
+                        "    me.get" << model_field->getName().toCamelCase() << "Array = function(){" << endl <<
+                        endl <<
+                        "        if( !me._data." << model_field->getName() << " || !Array.isArray(me._data." << model_field->getName() << ") ){" << endl <<
+                        "            return [];" << endl <<
+                        "        }" << endl <<
+                        endl <<
+                        "        return me._data." << model_field->getName() << ";" << endl <<
+                        endl <<
+                        "    };" << endl <<
+
+                        endl <<
+                        endl <<
+                        endl <<
+
+                        "    me.has" << model_field->getName().toCamelCase() << " = function( value ){" << endl <<
+                        endl <<
+                        "        if( !me._data." << model_field->getName() << " || !Array.isArray(me._data." << model_field->getName() << ") ){" << endl <<
+                        "            me._data." << model_field->getName() << " = [];" << endl <<
+                        "        }" << endl <<
+                        endl <<
+                        "        return _.indexOf( me._data." << model_field->getName() << ", value) != -1;" << endl <<
+                        endl <<
+                        "        };" << endl <<
+                        endl <<
+                        endl;
+
+                    } else {
+
+                        output_stream <<
+
+                        "    me.get" << model_field->getName().toCamelCase() << " = function(){" << endl <<
+                        endl <<
+                        "        return String(me._data." << model_field->getName() << ").length ? me._data." << model_field->getName() << " : null;" << endl <<
+                        endl <<
+                        "    };" << endl <<
+
+                        endl <<
+                        endl <<
+                        endl <<
+
+                        "    me.set" << model_field->getName().toCamelCase() << " = function( " << model_field->getName() << " ){ " << endl <<
+                        endl <<
+                        "        me.set( '" << model_field->getName() << "', " << model_field->getName() << " );" << endl <<
+                        endl <<
+                        "        return me;" << endl <<
+                        endl <<
+                        "    };" << endl <<
+                        endl <<
+                        endl <<
+                        endl;
+
+                    }
 
                 }
 
